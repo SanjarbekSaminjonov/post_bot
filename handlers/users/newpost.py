@@ -33,7 +33,7 @@ async def create_post(message: Message, state: FSMContext):
 async def create_post(message: Message, state: FSMContext):
     file_name = str(message.from_user.id) + '_' + str(message.message_id) + '.png'
     try:
-        await message.photo[-1].download(file_name)
+        await message.photo[-1].download(destination_file=file_name)
     except:
         file_name = 'no_image.png'
     await state.update_data({'accountImage': file_name})

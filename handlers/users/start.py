@@ -1,7 +1,7 @@
 from aiogram import types
 from data.config import FORCED_CHANNELS as CHANNELS
 from keyboards.inline.subscription import check_button
-from keyboards.default.main_buttons import buttons, cancel
+from keyboards.default.main_buttons import buttons
 from loader import bot, dp
 from aiogram.dispatcher import FSMContext
 from utils.misc import subscription
@@ -12,15 +12,24 @@ async def show_channels(message: types.Message, state: FSMContext):
     await state.finish()
     channels_format = str()
     for channel in CHANNELS:
-        chat = await bot.get_chat(channel)
-        invite_link = await chat.export_invite_link()
+        status = await subscription.check(user_id=message.from_user.id,
+                                          channel=channel)
 
-        channels_format += f"👉 <a href='{invite_link}'>{chat.title}</a>\n"
+        if not status:
+            chat = await bot.get_chat(channel)
+            invite_link = await chat.export_invite_link()
 
-    await message.answer(f"Quyidagi kanallarga obuna bo'ling: \n"
-                         f"{channels_format}",
-                         reply_markup=check_button,
-                         disable_web_page_preview=True)
+            channels_format += f"👉 <a href='{invite_link}'>{chat.title}</a>\n"
+
+    if channels_format:
+        await message.answer(
+            f"Quyidagi kanallarga obuna bo'ling: \n"
+            f"{channels_format}",
+            reply_markup=check_button,
+            disable_web_page_preview=True
+        )
+    else:
+        await message.answer("Harakatlardan birni tanlang!", reply_markup=buttons)
 
 
 @dp.callback_query_handler(text="check_subs")
